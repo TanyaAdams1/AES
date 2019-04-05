@@ -42,9 +42,9 @@ private:
 
     void *expand_key();
 
-    void *encrypt_block(unsigned char *plain);
+    void *encrypt_block(const unsigned char *plain);
 
-    void *decrypt_block(unsigned char *cipher);
+    void *decrypt_block(const unsigned char *cipher);
 };
 
 

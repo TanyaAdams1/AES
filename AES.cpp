@@ -108,10 +108,23 @@ void mix_columns(unsigned char (*s)[4]) {
     }
 }
 
-void add_round_key(unsigned char(*s)[4], unsigned char *key) {
+void inv_mix_columns(unsigned char (*s)[4]) {
+    unsigned char t[4];
+    for (int c = 0; c < 4; c++) {
+        for (int j = 0; j < 4; j++) {
+            t[j] = s[j][c];
+        }
+        s[0][c] = mult(0x0e, t[0]) ^ mult(0x0b, t[1]) ^ mult(0x0d, t[2]) ^ mult(0x09, t[3]);
+        s[1][c] = mult(0x09, t[0]) ^ mult(0x0e, t[1]) ^ mult(0x0b, t[2]) ^ mult(0x0d, t[3]);
+        s[2][c] = mult(0x0d, t[0]) ^ mult(0x09, t[1]) ^ mult(0x0e, t[2]) ^ mult(0x0b, t[3]);
+        s[3][c] = mult(0x0b, t[0]) ^ mult(0x0d, t[1]) ^ mult(0x09, t[2]) ^ mult(0x0e, t[3]);
+    }
+}
+
+void add_round_key(unsigned char(*s)[4], const unsigned char *key) {
     for (int i = 0; i < 4; i++)
         for (int j = 0; j < 4; ++j) {
-            s[3 - j][i] ^= key[i * 4 + j];
+            s[j][i] ^= key[i * 4 + j];
         }
 }
 
@@ -125,11 +138,30 @@ void shift_rows(unsigned char (*state)[4]) {
     }
 }
 
+void inv_shift_rows(unsigned char (*state)[4]) {
+    unsigned char _state[4][4];
+    memcpy(_state, state, 16 * sizeof(unsigned char));
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            state[i][j] = _state[i][(j - i + 4) % 4];
+        }
+    }
+}
+
 void sub_bytes(unsigned char (*state)[4]) {
     for (int i = 0; i < 4; ++i) {
         for (int j = 0; j < 4; ++j) {
             unsigned char tmp = state[i][j];
             state[i][j] = S[tmp / 16][tmp % 16];
+        }
+    }
+}
+
+void inv_sub_bytes(unsigned char (*state)[4]) {
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            unsigned char tmp = state[i][j];
+            state[i][j] = inv_S[tmp / 16][tmp % 16];
         }
     }
 }
@@ -150,7 +182,7 @@ unsigned rot_word(unsigned i) {
     auto *temp = new unsigned char[4];
     memcpy(temp, &i, sizeof(i));
     for (int j = 0; j < 4; ++j) {
-        temp[j] = ((unsigned char *) (&i))[(j + 3) % 4];
+        temp[j] = ((unsigned char *) (&i))[(j + 1) % 4];
     }
     unsigned ans = 0;
     memcpy(&ans, temp, sizeof(ans));
@@ -163,7 +195,7 @@ unsigned rcon(unsigned i) {
     for (int j = 0; j < i - 1; ++j) {
         temp = mult_x(temp);
     }
-    return temp << 24;
+    return temp;
 }
 
 void *AES::expand_key() {
@@ -191,16 +223,37 @@ void *AES::expand_key() {
     return expanded;
 }
 
-void *AES::decrypt_block(unsigned char *cipher) {
-
-    return nullptr;
-}
-
-void *AES::encrypt_block(unsigned char *plain) {
+void *AES::decrypt_block(const unsigned char *cipher) {
     unsigned char state[4][4];
     for (int j = 0; j < 4; ++j) {
         for (int i = 0; i < 4; ++i) {
-            state[3 - i][j] = plain[j * 4 + i];
+            state[i][j] = cipher[j * 4 + i];
+        }
+    }
+    add_round_key(state, reinterpret_cast<unsigned char *>(key_expanded + 4 * round));
+    for (int i = 0; i < round - 1; ++i) {
+        inv_shift_rows(state);
+        inv_sub_bytes(state);
+        add_round_key(state, reinterpret_cast<unsigned char *>(key_expanded + 4 * (round - i - 1)));
+        inv_mix_columns(state);
+    }
+    inv_shift_rows(state);
+    inv_sub_bytes(state);
+    add_round_key(state, reinterpret_cast<unsigned char *>(key_expanded));
+    auto *plain = new unsigned char[16];
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            plain[j * 4 + i] = state[i][j];
+        }
+    }
+    return plain;
+}
+
+void *AES::encrypt_block(const unsigned char *plain) {
+    unsigned char state[4][4];
+    for (int j = 0; j < 4; ++j) {
+        for (int i = 0; i < 4; ++i) {
+            state[i][j] = plain[j * 4 + i];
         }
     }
     add_round_key(state, reinterpret_cast<unsigned char *>(key_expanded));
@@ -223,7 +276,12 @@ void *AES::encrypt_block(unsigned char *plain) {
 }
 
 void *AES::decrypt(unsigned char *cipher, unsigned length) {
-    return nullptr;
+    auto *plain = new unsigned char[length + 16 - (length % 16)];
+    for (int i = 0; i < length / 16 + 1; ++i) {
+        void *cipher_block = decrypt_block(cipher + i * 16);
+        memcpy(plain + i * 16, cipher_block, 16 * sizeof(unsigned char));
+    }
+    return plain;
 }
 
 void *AES::encrypt(unsigned char *plain, unsigned length) {
