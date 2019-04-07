@@ -8,16 +8,16 @@
 
 class AES {
 public:
-    explicit AES(unsigned *key, int len) {
-        this->key = key;
+    explicit AES(void *key, int len) {
+        this->key = static_cast<unsigned int *>(key);
         switch (len) {
-            case 4:
+            case 16:
                 round = 10;
                 break;
-            case 6:
+            case 24:
                 round = 12;
                 break;
-            case 8:
+            case 32:
                 round = 14;
                 break;
             default:
@@ -26,7 +26,7 @@ public:
         key_expanded = static_cast<unsigned int *>(expand_key());
     }
 
-    void *decrypt(unsigned char *cipher, unsigned int length);
+    void *decrypt(const void *cipher, unsigned int length);
 
     int getRound() const;
 
@@ -34,7 +34,7 @@ public:
 
     unsigned int *getKeyExpanded() const;
 
-    void *encrypt(unsigned char *plain, unsigned int length);
+    void *encrypt(const void *plain, unsigned int length);
 
 private:
     int round{};

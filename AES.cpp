@@ -275,19 +275,19 @@ void *AES::encrypt_block(const unsigned char *plain) {
     return cipher;
 }
 
-void *AES::decrypt(unsigned char *cipher, unsigned length) {
+void *AES::decrypt(const void *cipher, unsigned length) {
     auto *plain = new unsigned char[length + 16 - (length % 16)];
     for (int i = 0; i < length / 16 + 1; ++i) {
-        void *cipher_block = decrypt_block(cipher + i * 16);
+        void *cipher_block = decrypt_block(reinterpret_cast<const unsigned char *>(cipher) + i * 16);
         memcpy(plain + i * 16, cipher_block, 16 * sizeof(unsigned char));
     }
     return plain;
 }
 
-void *AES::encrypt(unsigned char *plain, unsigned length) {
+void *AES::encrypt(const void *plain, unsigned length) {
     auto *cipher = new unsigned char[length + 16 - (length % 16)];
     for (int i = 0; i < length / 16 + 1; ++i) {
-        void *cipher_block = encrypt_block(plain + i * 16);
+        void *cipher_block = encrypt_block(reinterpret_cast<const unsigned char *>(plain) + i * 16);
         memcpy(cipher + i * 16, cipher_block, 16 * sizeof(unsigned char));
     }
     return cipher;

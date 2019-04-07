@@ -21,10 +21,11 @@ int main() {
     for (unsigned int &i : key) {
         i = permute_bytes(i);
     }
-    AES cipher(key, 4);
+    AES cipher(key, 16);
     for (int i = 0; i < cipher.getRound() + 1; ++i) {
         for (int j = 0; j < 4; ++j) {
-            cout << hex << setw(8) << setfill('0') << permute_bytes(cipher.getKeyExpanded()[i * 4 + j]) << endl;
+            cout << "* `" << hex << setw(8) << setfill('0') << permute_bytes(cipher.getKeyExpanded()[i * 4 + j]) << "`"
+                 << endl;
         }
     }
     unsigned plain[] = {
