@@ -1,4 +1,7 @@
+sudo: required
 language: c++
 dist: xenial
-before_install:
+before_script:
   - cmake .
+script:
+  - make
