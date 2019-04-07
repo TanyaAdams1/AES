@@ -6,13 +6,13 @@ This is the C++ implementation of the AES encryption standard, the mode of opera
 
 This program is written in response to the homework requirement of the course _Cryptography_.
 
-##Usage
+## Usage
 The whole program is written strictly according to the specifications on
 [the FIPS Publication 197][FIPS].
 
 [FIPS]: https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
 
-###To use the AES package
+### To use the AES package
 
 To use the package, include the header file
 
@@ -42,7 +42,7 @@ where `plain` is the pointer to the first bit of the plaintext and
 
 To decrypt, simply use the function `decrypt` instead, the signature is the same as `encrypt`.
 
-###To reproduce the results in the next section
+### To reproduce the results in the next section
 
 To reproduce the results, you'll have to compile the whole program. The prerequisites are
 ```
@@ -52,10 +52,10 @@ To reproduce the results, you'll have to compile the whole program. The prerequi
 
 Navigate to the root directory, and run`cmake .`, then run `make`, and then `./main` (on the Ubuntu OS), you'll see the output.
 
-##Answer to the problem
+## Answer to the problem
 
 The code in `main.cpp` is used for calculating the answer for problem 4.4 and 4.5.
-###Answer to 4.4: the key schedule
+### Answer to 4.4: the key schedule
 The key schedule for the key `2B7E151628AED2A6ABF7158809CF4F3C` is
 * `2b7e1516`
 * `28aed2a6`
@@ -101,11 +101,13 @@ The key schedule for the key `2B7E151628AED2A6ABF7158809CF4F3C` is
 * `c9ee2589`
 * `e13f0cc8`
 * `b6630ca6`
-###The encrypted text
+
+### The encrypted text
 The ciphertext for the plaintext `3243F6A8885A308D313198A2E0370734` with the 
 key in 4.4 is
 `3925841d02dc09fbdc118597196a0b32`
-##Approaches to break the AES cipher system
+
+## Approaches to break the AES cipher system
 According to the [Wikipedia page](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard), and based on
 the results from Google Scholar, no black-box attack to the full AES system is known up till now.
 
