@@ -52,6 +52,30 @@ To reproduce the results, you'll have to compile the whole program. The prerequi
 
 Navigate to the root directory, and run`cmake .`, then run `make`, and then `./main` (on the Ubuntu OS), you'll see the output.
 
+## The Explanation of the Code
+
+There seems to be nothing much to explain about the code, since nearly every line of code of the AES is written strictly according to the specifications of FIPS. If you feel uncertain about certain parts of the program, it is recommended to refer to the FIPS 197 documents listed above, where everything is explained detailly.
+
+The first thing needs explaining seems to be the implementation of mult, the multiplication on the GF(<img src="https://tex.s2cms.ru/svg/2%5E8" alt="2^8" />). According to the FIPS 197, the 8-bit number multiplication is considered corresponds with the multiplication of polynomials modulo an irreducible polynomial of degree 8. For example, to compute 0x57\*0x83, one do
+
+<img src="https://tex.s2cms.ru/svg/%20%0A%5Cbegin%7Baligned%7D%5Cleft(x%5E%7B6%7D%2Bx%5E%7B4%7D%2Bx%5E%7B2%7D%2Bx%2B1%5Cright)%5Cleft(x%5E%7B7%7D%2Bx%2B1%5Cright)%3D%26%20x%5E%7B13%7D%2Bx%5E%7B11%7D%2Bx%5E%7B9%7D%2Bx%5E%7B8%7D%2Bx%5E%7B7%7D%2B%5C%5C%20%26%20x%5E%7B7%7D%2Bx%5E%7B5%7D%2Bx%5E%7B3%7D%2Bx%5E%7B2%7D%2Bx%2B%5C%5C%20%26%20x%5E%7B6%7D%2Bx%5E%7B4%7D%2Bx%5E%7B2%7D%2Bx%2B1%20%5C%5C%20%26%3Dx%5E%7B13%7D%2Bx%5E%7B11%7D%2Bx%5E%7B9%7D%2Bx%5E%7B8%7D%2Bx%5E%7B6%7D%2Bx%5E%7B5%7D%2Bx%5E%7B3%7D%2B1%20%5Cend%7Baligned%7D%0A%20" alt=" 
+\begin{aligned}\left(x^{6}+x^{4}+x^{2}+x+1\right)\left(x^{7}+x+1\right)=&amp; x^{13}+x^{11}+x^{9}+x^{8}+x^{7}+\\ &amp; x^{7}+x^{5}+x^{3}+x^{2}+x+\\ &amp; x^{6}+x^{4}+x^{2}+x+1 \\ &amp;=x^{13}+x^{11}+x^{9}+x^{8}+x^{6}+x^{5}+x^{3}+1 \end{aligned}
+ " />
+ 
+ and
+ 
+ <img src="https://tex.s2cms.ru/svg/%20%0A%5Cbegin%7Barray%7D%7Bc%7D%7Bx%5E%7B13%7D%2Bx%5E%7B11%7D%2Bx%5E%7B9%7D%2Bx%5E%7B8%7D%2Bx%5E%7B6%7D%2Bx%5E%7B5%7D%2Bx%5E%7B4%7D%2Bx%5E%7B3%7D%2B1%20%5Coperatorname%7Bmodulo%7D%20%5Cleft(x%5E%7B8%7D%2Bx%5E%7B4%7D%2Bx%5E%7B3%7D%2Bx%2B1%5Cright)%7D%20%5C%5C%20%7B%3D%5Cquad%20x%5E%7B7%7D%2Bx%5E%7B6%7D%2B1%7D%5Cend%7Barray%7D%0A%20" alt=" 
+\begin{array}{c}{x^{13}+x^{11}+x^{9}+x^{8}+x^{6}+x^{5}+x^{4}+x^{3}+1 \operatorname{modulo} \left(x^{8}+x^{4}+x^{3}+x+1\right)} \\ {=\quad x^{7}+x^{6}+1}\end{array}
+ " />
+ 
+ and therefore 0x57\*0x83=0xc1.
+ 
+ In this program, this multiplication is implemented in the mult function, which calls the mult_x function to do the "shift left and modulo" operation.
+ 
+ The other one needing explanation is the permute_byte function. It has nothing to do with the implementation of AES per se. It is to deal with the small endian nature of the Intel CPU of my computer. The Intel chip stores the lower bits of the number in smaller address. Therefore, if one stores the int 0x01020304 in memory, and would like to disassemble it into 4 chars, they would be 0x04,0x03,0x02,0x01 in an address-increasing order, with is counter-intuitive. Since it is more convenient to write the key and plaintext in the format of int rather than char, I chose to write it as int and use the function to adjust the position of the bytes to avoid such trouble.
+ 
+ As for the "Hello world" output in the beginning, I just didn't want to bother myself by removing the code generated automatically by my IDE.
+
 ## Answer to the problem
 
 The code in `main.cpp` is used for calculating the answer for problem 4.4 and 4.5.
